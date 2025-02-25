@@ -4,23 +4,16 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import datetime
-import pyttsx3
+from gtts import gTTS
+import os
 import random
 
 # Download necessary NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
 
-# Load a faster pre-trained model
+# Load a pre-trained question-answering model
 chatbot = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
-
-# Initialize text-to-speech engine
-tts_engine = pyttsx3.init()
-tts_engine.setProperty('rate', 150)
-
-def speak_text(text):
-    tts_engine.say(text)
-    tts_engine.runAndWait()
 
 # Preprocess user input
 def preprocess_input(user_input):
@@ -28,6 +21,12 @@ def preprocess_input(user_input):
     words = word_tokenize(user_input)
     filtered_words = [word for word in words if word.lower() not in stop_words]
     return ' '.join(filtered_words)
+
+# Text-to-speech function using gTTS
+def speak_text(text):
+    tts = gTTS(text=text, lang="en")
+    tts.save("response.mp3")
+    os.system("start response.mp3")  
 
 # Doctor appointment scheduling
 def schedule_appointment():
@@ -71,7 +70,7 @@ def calculate_bmi(weight, height):
 
 # Healthcare chatbot response
 def healthcare_chatbot(user_input):
-    user_input = preprocess_input(user_input).lower()
+    processed_input = preprocess_input(user_input).lower()
 
     keyword_responses = {
         "sneeze": "Frequent sneezing may indicate allergies or a cold. Consult a doctor if symptoms persist.",
@@ -84,7 +83,7 @@ def healthcare_chatbot(user_input):
     }
 
     for key, response in keyword_responses.items():
-        if key in user_input:
+        if key in processed_input:
             return response
 
     context = """
@@ -93,7 +92,7 @@ def healthcare_chatbot(user_input):
     """
     try:
         response = chatbot(question=user_input, context=context)
-        return response['answer']
+        return response.get("answer", "I'm sorry, I couldn't process your request. Please try again.")
     except Exception:
         return "I'm sorry, I couldn't process your request. Please try again."
 
