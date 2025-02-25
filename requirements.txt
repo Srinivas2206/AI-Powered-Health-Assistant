@@ -3,3 +3,4 @@ transformers
 torch
 nltk
 pyttsx3
+espeak
